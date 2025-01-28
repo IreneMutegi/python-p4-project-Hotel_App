@@ -2,7 +2,6 @@ from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import MetaData
 from sqlalchemy_serializer import SerializerMixin
 
-# Set up naming conventions for SQLAlchemy (as before)
 convention = {
     "ix": "ix_%(column_0_label)s",
     "uq": "uq_%(table_name)s_%(column_0_name)s",
@@ -14,6 +13,17 @@ convention = {
 metadata = MetaData(naming_convention=convention)
 db = SQLAlchemy(metadata=metadata)
 
+class UserType(db.Model):
+    __tablename__ = 'user_types'
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(50), unique=True)
+
+    # Relationship with User model
+    users = db.relationship('User', back_populates='user_type')
+
+
+# User model
 class User(db.Model, SerializerMixin):
     __tablename__ = 'users'
     
@@ -22,11 +32,20 @@ class User(db.Model, SerializerMixin):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String, unique=True)
     email = db.Column(db.String, unique=True)
-    
+    password = db.Column(db.String)
+
+    user_type_id = db.Column(db.Integer, db.ForeignKey('user_types.id'))
+
     # Relationships
     room_bookings = db.relationship('UserRoomBooking', back_populates='user')
     amenity_bookings = db.relationship('UserAmenityBooking', back_populates='user')
+    user_type = db.relationship('UserType', back_populates='users')
 
+    def set_password(self, password):
+        self.password = password 
+
+
+# Room model
 class Room(db.Model, SerializerMixin):
     __tablename__ = 'rooms'
 
@@ -43,6 +62,8 @@ class Room(db.Model, SerializerMixin):
     # Relationship
     user_room_bookings = db.relationship('UserRoomBooking', back_populates='room')
 
+
+# Amenity model
 class Amenity(db.Model, SerializerMixin):
     __tablename__ = 'amenities'
 
@@ -59,21 +80,8 @@ class Amenity(db.Model, SerializerMixin):
     # Relationship
     user_amenity_bookings = db.relationship('UserAmenityBooking', back_populates='amenity')
 
-class UserRoomBooking(db.Model, SerializerMixin):
-    __tablename__ = 'user_room_bookings'
 
-    serialize_rules = ('-user_room_bookings.user', '-user_room_bookings.room')
-
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
-    room_id = db.Column(db.Integer, db.ForeignKey('rooms.id'))
-    check_in_date = db.Column(db.DateTime)
-    check_out_date = db.Column(db.DateTime)
-
-    # Relationships
-    user = db.relationship('User', back_populates='room_bookings')
-    room = db.relationship('Room', back_populates='user_room_bookings')
-
+# User Amenity Booking model
 class UserAmenityBooking(db.Model, SerializerMixin):
     __tablename__ = 'user_amenity_bookings'
 
@@ -88,3 +96,19 @@ class UserAmenityBooking(db.Model, SerializerMixin):
     user = db.relationship('User', back_populates='amenity_bookings')
     amenity = db.relationship('Amenity', back_populates='user_amenity_bookings')
 
+
+# User Room Booking model
+class UserRoomBooking(db.Model, SerializerMixin):
+    __tablename__ = 'user_room_bookings'
+
+    serialize_rules = ('-user_room_bookings.user', '-user_room_bookings.room')
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    room_id = db.Column(db.Integer, db.ForeignKey('rooms.id'))
+    check_in_date = db.Column(db.DateTime)
+    check_out_date = db.Column(db.DateTime)
+
+    # Relationships
+    user = db.relationship('User', back_populates='room_bookings')
+    room = db.relationship('Room', back_populates='user_room_bookings')

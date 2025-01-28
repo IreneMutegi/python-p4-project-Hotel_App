@@ -1,0 +1,213 @@
+{
+  "users": [
+    {
+      "id": "1",
+      "name": "John Doe",
+      "email": "johndoe@example.com",
+      "password": "password123"
+    },
+    {
+      "id": "d34f",
+      "name": "goon",
+      "username": "joon@gmail.com",
+      "password": "Kimathi8230"
+    },
+    {
+      "id": "1604",
+      "name": "Fish",
+      "username": "joon@gmail.com",
+      "password": "Kimathi8230"
+    },
+    {
+      "id": "29c4",
+      "name": "john",
+      "username": "joon@gmail.com",
+      "password": "Kimathi8230"
+    },
+    {
+      "id": "d807",
+      "name": "erik",
+      "username": "joon@gmail.com",
+      "password": "Kimathi8230"
+    },
+    {
+      "id": "5bc0",
+      "name": "ax",
+      "username": "joon@gmail.com",
+      "password": "Kimathi8230"
+    },
+    {
+      "id": "f7e6",
+      "name": "loo",
+      "username": "joon@gmail.com",
+      "password": "Kimathi8230"
+    },
+    {
+      "id": "84de",
+      "name": "loo",
+      "username": "joon@gmail.com",
+      "password": "Kimathi8230"
+    },
+    {
+      "id": "885b",
+      "name": "hgh",
+      "username": "joon@gmail.com",
+      "password": "Kimathi8230"
+    },
+    {
+      "id": "4e44",
+      "name": "gg",
+      "username": "joon@gmail.com",
+      "password": "Kimathi8230"
+    },
+    {
+      "id": "c932",
+      "name": "james",
+      "username": "jamesn@gmail.com",
+      "password": "Kimathi8230"
+    },
+    {
+      "id": "df36",
+      "name": "irene",
+      "username": "irene@gmail.com",
+      "password": "Kimathi8230"
+    }
+  ],
+  "bookings": [
+    {
+      "id": "1",
+      "clientName": "John Doe",
+      "clientEmail": "johndoe@example.com",
+      "room": "Executive Suite",
+      "cost": "$200/night",
+      "description": "Spacious suite with king-sized bed and private balcony.",
+      "bookingDate": "2024-12-01",
+      "bookingTime": "14:00",
+      "amenity": null
+    },
+    {
+      "id": "2",
+      "clientName": "Jane Smith",
+      "clientEmail": "janesmith@example.com",
+      "room": null,
+      "cost": null,
+      "description": null,
+      "bookingDate": "2024-12-03",
+      "bookingTime": "10:00",
+      "amenity": "Outdoor Pool"
+    },
+    {
+      "id": "e586",
+      "room": "Garden Studio",
+      "cost": "$180/night",
+      "description": "Beautiful garden views and modern amenities.",
+      "bookingDate": "2024-11-20",
+      "bookingTime": "05:40",
+      "clientName": "lap",
+      "clientEmail": "lap@gmail.com"
+    },
+    {
+      "id": "9976",
+      "room": "Single Room",
+      "cost": "$100/night",
+      "description": "Ideal for solo travelers with comfortable facilities.",
+      "bookingDate": "2024-11-20",
+      "bookingTime": "05:48",
+      "clientName": "hh",
+      "clientEmail": "bjsj@gmail.com"
+    },
+    {
+      "id": "6234",
+      "amenity": "Spa Services",
+      "bookingDate": "2024-11-15",
+      "bookingTime": "03:53",
+      "clientName": "dd",
+      "clientEmail": "ds@g.com"
+    },
+    {
+      "id": "39f9",
+      "room": "Beachfront Double Room",
+      "cost": "$120/night",
+      "description": "Cozy room with a beachfront view and two beds.",
+      "bookingDate": "2024-11-22",
+      "bookingTime": "03:55",
+      "clientName": "erik",
+      "clientEmail": "erik@gmail.com"
+    },
+    {
+      "id": "2dbc",
+      "amenity": "Spa Services",
+      "bookingDate": "2024-11-19",
+      "bookingTime": "03:55",
+      "clientName": "guuhj",
+      "clientEmail": "guu@gmail.com"
+    },
+    {
+      "id": "42c8",
+      "room": "Beachfront Double Room",
+      "cost": "$120/night",
+      "description": "Cozy room with a beachfront view and two beds.",
+      "bookingDate": "2024-11-20",
+      "bookingTime": "06:20",
+      "clientName": "gg",
+      "clientEmail": "gg@gmail.com"
+    },
+    {
+      "id": "d465",
+      "room": "Tropical Oasis",
+      "cost": "$500/night",
+      "description": "Top-notch suite with exceptional amenities.",
+      "bookingDate": "2024-11-20",
+      "bookingTime": "02:44",
+      "clientName": "irene",
+      "clientEmail": "irene@gmail.com"
+    },
+    {
+      "id": "dcd0",
+      "amenity": "Spa Services",
+      "bookingDate": "2024-11-20",
+      "bookingTime": "01:19",
+      "clientName": "irene",
+      "clientEmail": "irene@gmail.com"
+    }
+  ],
+  "amenities": [
+    {
+      "id": "1",
+      "emoji": "🌐",
+      "title": "Free Wi-Fi",
+      "description": "Enjoy high-speed internet access throughout the hotel for all your work and entertainment needs.",
+      "password": "WiFi1234"
+    },
+    {
+      "id": "2",
+      "emoji": "🏊‍♂️",
+      "title": "Outdoor Pool",
+      "description": "Relax by our outdoor pool, offering a perfect spot for a refreshing swim and sunbathing."
+    },
+    {
+      "id": "3",
+      "emoji": "🍽",
+      "title": "Fine Dining Restaurant",
+      "description": "Indulge in gourmet dishes prepared by world-class chefs in a luxurious dining setting."
+    },
+    {
+      "id": "4",
+      "emoji": "💆",
+      "title": "Spa Services",
+      "description": "Relax and rejuvenate with our variety of spa treatments designed to provide ultimate relaxation."
+    },
+    {
+      "id": "5",
+      "emoji": "🏋️‍♀️",
+      "title": "Fitness Center",
+      "description": "Stay fit and healthy in our fully equipped fitness center, featuring the latest workout equipment."
+    },
+    {
+      "id": "6",
+      "emoji": "🚣‍♀️",
+      "title": "Canoeing",
+      "description": "Explore the waters with our exciting canoeing experience."
+    }
+  ]
+}
