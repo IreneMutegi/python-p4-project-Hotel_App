@@ -1,7 +1,7 @@
 from flask import Flask, request, make_response
 from flask_migrate import Migrate
 from flask_restful import Api, Resource
-from models import db, User, Room, Amenity, UserRoomBooking, UserAmenityBooking  # Your models
+from models import db, User, Room, Amenity, UserRoomBooking, UserAmenityBooking  
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///app.db'  
@@ -144,9 +144,9 @@ class UserRoomBookings(Resource):
         response = make_response(response_dict, 201)
         return response
 
-api.add_resource(UserRoomBookings, '/user_room_bookings')  # Create and get all room bookings
+api.add_resource(UserRoomBookings, '/user_room_bookings')  
 
-# User Amenity Booking Resource (for handling amenity bookings by users)
+# User Amenity Booking Resource 
 class UserAmenityBookings(Resource):
     def get(self):
         response_dict_list = [booking.to_dict() for booking in UserAmenityBooking.query.all()]
