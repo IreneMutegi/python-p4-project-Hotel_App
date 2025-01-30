@@ -13,39 +13,35 @@ convention = {
 metadata = MetaData(naming_convention=convention)
 db = SQLAlchemy(metadata=metadata)
 
-class UserType(db.Model):
+class UserType(db.Model, SerializerMixin):
     __tablename__ = 'user_types'
 
+    serialize_rules = ('-users',)  # Exclude the 'users' relationship to avoid circular reference during serialization
+
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(50), unique=True)
+    name = db.Column(db.String(50), unique=True, nullable=False)
 
     # Relationship with User model
     users = db.relationship('User', back_populates='user_type')
 
-
 # User model
 class User(db.Model, SerializerMixin):
     __tablename__ = 'users'
-    
-    serialize_rules = ('-user_room_bookings.user', '-user_amenity_bookings.user')
+
+    serialize_rules = ('-room_bookings', '-amenity_bookings')  # Excluding the entire relationship to avoid circular reference
 
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String, unique=True)
     email = db.Column(db.String, unique=True)
     password = db.Column(db.String)  # Store plain-text password
+    name = db.Column(db.String)  # Add name field to the model
 
     user_type_id = db.Column(db.Integer, db.ForeignKey('user_types.id'))
 
     # Relationships
-    room_bookings = db.relationship('UserRoomBooking', back_populates='user')
-    amenity_bookings = db.relationship('UserAmenityBooking', back_populates='user')
+    room_bookings = db.relationship('UserRoomBooking', back_populates='user', lazy='subquery')
+    amenity_bookings = db.relationship('UserAmenityBooking', back_populates='user', lazy='subquery')
     user_type = db.relationship('UserType', back_populates='users')
-
-    def set_password(self, password):
-        self.password = password  # Store password directly (without hashing)
-
-    def check_password(self, password):
-        return self.password == password  # Directly compare passwords
 
 
 # Room model
@@ -58,6 +54,7 @@ class Room(db.Model, SerializerMixin):
     name = db.Column(db.String)
     type = db.Column(db.String)
     price = db.Column(db.Numeric)
+    description = db.Column(db.String(255))
 
     # Foreign key to Users (rooms booked by users)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
