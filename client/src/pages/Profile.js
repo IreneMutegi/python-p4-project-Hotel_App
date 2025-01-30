@@ -3,16 +3,17 @@ import './Profile.css';
 
 function Profile() {
   const [user, setUser] = useState(null);
-  const [roomBookings, setRoomBookings] = useState([]);
-  const [amenityBookings, setAmenityBookings] = useState([]);
+  const [bookings, setBookings] = useState([]);
   const [errorMessage, setErrorMessage] = useState("");
-  const [editingRoomBooking, setEditingRoomBooking] = useState(null);
-  const [editingAmenityBooking, setEditingAmenityBooking] = useState(null);
-  const [updatedRoomBooking, setUpdatedRoomBooking] = useState({
+  const [editingBooking, setEditingBooking] = useState(null);
+  const [updatedBooking, setUpdatedBooking] = useState({ bookingDate: "", bookingTime: "" });
+  const [newBooking, setNewBooking] = useState({
+    username: "",
+    email: "",
+    bookingDate: "",
     bookingTime: "",
-  });
-  const [updatedAmenityBooking, setUpdatedAmenityBooking] = useState({
-    bookingTime: "",
+    roomId: "",
+    amenityId: ""
   });
 
   useEffect(() => {
@@ -24,14 +25,15 @@ function Profile() {
       // Set user details
       setUser({ name: userName, email: userEmail });
 
-      // Fetch user-specific room bookings
-      fetch(`http://localhost:5555/bookings?clientEmail=${userEmail}`)
+      // Fetch bookings related to this user using email
+      fetch(`http://127.0.0.1:5555/bookings?clientEmail=${userEmail}`)
         .then((response) => response.json())
         .then((data) => {
-          const roomBookings = data.filter((booking) => booking.room);
-          const amenityBookings = data.filter((booking) => booking.amenity);
-          setRoomBookings(roomBookings);
-          setAmenityBookings(amenityBookings);
+          if (Array.isArray(data)) {
+            setBookings(data); // Set bookings only if data is an array
+          } else {
+            setErrorMessage("Bookings data is not in the expected format.");
+          }
         })
         .catch((error) => {
           console.error("Error fetching bookings:", error);
@@ -42,108 +44,93 @@ function Profile() {
     }
   }, []);
 
-  const handleEditRoomBooking = (booking) => {
-    setEditingRoomBooking(booking);
-    setUpdatedRoomBooking({
-      bookingTime: booking.bookingTime,
-    });
-  };
-
-  const handleEditAmenityBooking = (booking) => {
-    setEditingAmenityBooking(booking);
-    setUpdatedAmenityBooking({
+  const handleEdit = (booking) => {
+    setEditingBooking(booking);
+    setUpdatedBooking({
+      bookingDate: booking.bookingDate,
       bookingTime: booking.bookingTime,
     });
   };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    if (editingRoomBooking) {
-      setUpdatedRoomBooking((prevState) => ({
-        ...prevState,
-        [name]: value,
-      }));
-    } else {
-      setUpdatedAmenityBooking((prevState) => ({
-        ...prevState,
-        [name]: value,
-      }));
-    }
+    setUpdatedBooking((prevState) => ({
+      ...prevState,
+      [name]: value,
+    }));
   };
 
-  const handleSaveRoomEdit = (id) => {
-    fetch(`http://localhost:5555/room_bookings/${id}`, {
+  const handleSaveEdit = (id) => {
+    fetch(`http://127.0.0.1:5555/bookings/${id}`, {
       method: "PATCH",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify(updatedRoomBooking),
+      body: JSON.stringify(updatedBooking),
     })
       .then((response) => response.json())
       .then((data) => {
-        setRoomBookings((prevBookings) =>
+        setBookings((prevBookings) =>
           prevBookings.map((booking) =>
-            booking.id === id ? { ...booking, ...updatedRoomBooking } : booking
+            booking.id === id ? { ...booking, ...updatedBooking } : booking
           )
         );
-        setEditingRoomBooking(null); // Close the edit form
+        setEditingBooking(null); // Close the edit form
       })
       .catch((error) => {
-        console.error("Error saving edited room booking:", error);
+        console.error("Error saving edited booking:", error);
         setErrorMessage("An error occurred while saving the booking.");
       });
   };
 
-  const handleSaveAmenityEdit = (id) => {
-    fetch(`http://localhost:5555/amenity_bookings/${id}`, {
-      method: "PATCH",
+  const handleDelete = (id) => {
+    fetch(`http://127.0.0.1:5555/bookings/${id}`, {
+      method: "DELETE",
+    })
+      .then(() => {
+        setBookings((prevBookings) =>
+          prevBookings.filter((booking) => booking.id !== id)
+        );
+      })
+      .catch((error) => {
+        console.error("Error deleting booking:", error);
+        setErrorMessage("An error occurred while deleting the booking.");
+      });
+  };
+
+  const handleNewBookingChange = (e) => {
+    const { name, value } = e.target;
+    setNewBooking((prevState) => ({
+      ...prevState,
+      [name]: value,
+    }));
+  };
+
+  const handleSubmitNewBooking = (e) => {
+    e.preventDefault();
+    
+    fetch("http://127.0.0.1:5555/bookings", {
+      method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify(updatedAmenityBooking),
+      body: JSON.stringify(newBooking),
     })
       .then((response) => response.json())
       .then((data) => {
-        setAmenityBookings((prevBookings) =>
-          prevBookings.map((booking) =>
-            booking.id === id ? { ...booking, ...updatedAmenityBooking } : booking
-          )
-        );
-        setEditingAmenityBooking(null); // Close the edit form
+        setBookings((prevBookings) => [...prevBookings, data]); // Add new booking to the list
+        setNewBooking({
+          username: "",
+          email: "",
+          bookingDate: "",
+          bookingTime: "",
+          roomId: "",
+          amenityId: ""
+        }); // Reset new booking form
       })
       .catch((error) => {
-        console.error("Error saving edited amenity booking:", error);
-        setErrorMessage("An error occurred while saving the booking.");
-      });
-  };
-
-  const handleDeleteRoomBooking = (id) => {
-    fetch(`http://localhost:5555/room_bookings/${id}`, {
-      method: "DELETE",
-    })
-      .then(() => {
-        setRoomBookings((prevBookings) =>
-          prevBookings.filter((booking) => booking.id !== id)
-        );
-      })
-      .catch((error) => {
-        console.error("Error deleting room booking:", error);
-        setErrorMessage("An error occurred while deleting the booking.");
-      });
-  };
-
-  const handleDeleteAmenityBooking = (id) => {
-    fetch(`http://localhost:5555/amenity_bookings/${id}`, {
-      method: "DELETE",
-    })
-      .then(() => {
-        setAmenityBookings((prevBookings) =>
-          prevBookings.filter((booking) => booking.id !== id)
-        );
-      })
-      .catch((error) => {
-        console.error("Error deleting amenity booking:", error);
-        setErrorMessage("An error occurred while deleting the booking.");
+        console.error("Error creating new booking:", error);
+        setErrorMessage("An error occurred while creating the booking.");
       });
   };
 
@@ -153,127 +140,129 @@ function Profile() {
   return (
     <div className="profile-container">
       <h1 className="profile-title">Welcome, {user.name}!</h1>
-      <h2>Your Room Bookings</h2>
-      <ul className="bookings-list">
-        {roomBookings.map((booking) => (
-          <li key={booking.id} className="booking-item">
-            {editingRoomBooking && editingRoomBooking.id === booking.id ? (
-              <div>
-                <h3>Edit Room Booking</h3>
-                <div className="edit-form">
-                  <label>
-                    Time:
-                    <input
-                      type="time"
-                      name="bookingTime"
-                      value={updatedRoomBooking.bookingTime}
-                      onChange={handleInputChange}
-                    />
-                  </label>
+      <h2>Your Bookings</h2>
+      {bookings.length === 0 ? (
+        <p>No bookings found.</p>
+      ) : (
+        <ul className="bookings-list">
+          {bookings.map((booking) => (
+            <li key={booking.id} className="booking-item">
+              {editingBooking && editingBooking.id === booking.id ? (
+                <div>
+                  <h3>Edit Booking</h3>
+                  <div className="edit-form">
+                    <label>
+                      Date:
+                      <input
+                        type="date"
+                        name="bookingDate"
+                        value={updatedBooking.bookingDate}
+                        onChange={handleInputChange}
+                      />
+                    </label>
+                    <label>
+                      Time:
+                      <input
+                        type="time"
+                        name="bookingTime"
+                        value={updatedBooking.bookingTime}
+                        onChange={handleInputChange}
+                      />
+                    </label>
+                    <div className="button-container">
+                      <button
+                        className="save-btn"
+                        type="button"
+                        onClick={() => handleSaveEdit(booking.id)}
+                      >
+                        Save
+                      </button>
+                      <button
+                        className="cancel-btn"
+                        type="button"
+                        onClick={() => setEditingBooking(null)}
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="booking-info">
+                  <h3>{booking.room || booking.amenity}</h3>
+                  <p>{booking.description}</p>
+                  <p>Cost: {booking.cost}</p>
+                  <p>Date: {booking.bookingDate}</p>
+                  <p>Time: {booking.bookingTime}</p>
                   <div className="button-container">
                     <button
-                      className="save-btn"
-                      type="button"
-                      onClick={() => handleSaveRoomEdit(booking.id)}
+                      className="edit-btn"
+                      onClick={() => handleEdit(booking)}
                     >
-                      Save
+                      Edit
                     </button>
                     <button
-                      className="cancel-btn"
-                      type="button"
-                      onClick={() => setEditingRoomBooking(null)}
+                      className="delete-btn"
+                      onClick={() => handleDelete(booking.id)}
                     >
-                      Cancel
+                      Delete
                     </button>
                   </div>
                 </div>
-              </div>
-            ) : (
-              <div className="booking-info">
-                <h3>{booking.room.name}</h3>
-                <p>{booking.room.description}</p>
-                <p>Cost: {booking.room.price}</p>
-                <p>Time: {booking.bookingTime}</p>
-                <div className="button-container">
-                  <button
-                    className="edit-btn"
-                    onClick={() => handleEditRoomBooking(booking)}
-                  >
-                    Edit
-                  </button>
-                  <button
-                    className="delete-btn"
-                    onClick={() => handleDeleteRoomBooking(booking.id)}
-                  >
-                    Delete
-                  </button>
-                </div>
-              </div>
-            )}
-          </li>
-        ))}
-      </ul>
-
-      <h2>Your Amenity Bookings</h2>
-      <ul className="bookings-list">
-        {amenityBookings.map((booking) => (
-          <li key={booking.id} className="booking-item">
-            {editingAmenityBooking && editingAmenityBooking.id === booking.id ? (
-              <div>
-                <h3>Edit Amenity Booking</h3>
-                <div className="edit-form">
-                  <label>
-                    Time:
-                    <input
-                      type="time"
-                      name="bookingTime"
-                      value={updatedAmenityBooking.bookingTime}
-                      onChange={handleInputChange}
-                    />
-                  </label>
-                  <div className="button-container">
-                    <button
-                      className="save-btn"
-                      type="button"
-                      onClick={() => handleSaveAmenityEdit(booking.id)}
-                    >
-                      Save
-                    </button>
-                    <button
-                      className="cancel-btn"
-                      type="button"
-                      onClick={() => setEditingAmenityBooking(null)}
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <div className="booking-info">
-                <h3>{booking.amenity.name}</h3>
-                <p>{booking.amenity.description}</p>
-                <p>Cost: {booking.amenity.charges}</p>
-                <p>Time: {booking.bookingTime}</p>
-                <div className="button-container">
-                  <button
-                    className="edit-btn"
-                    onClick={() => handleEditAmenityBooking(booking)}
-                  >
-                    Edit
-                  </button>
-                  <button
-                    className="delete-btn"
-                    onClick={() => handleDeleteAmenityBooking(booking.id)}
-                  >
-                    Delete
-                  </button>
-                </div>
-              </div>
-            )}
-          </li>
-        ))}
-      </ul>
+              )}
+            </li>
+          ))}
+        </ul>
+      )}
+      
+      <h2>Make a New Booking</h2>
+      <form onSubmit={handleSubmitNewBooking}>
+        <input
+          type="text"
+          name="username"
+          placeholder="Username"
+          value={newBooking.username}
+          onChange={handleNewBookingChange}
+          required
+        />
+        <input
+          type="email"
+          name="email"
+          placeholder="Email"
+          value={newBooking.email}
+          onChange={handleNewBookingChange}
+          required
+        />
+        <input
+          type="date"
+          name="bookingDate"
+          value={newBooking.bookingDate}
+          onChange={handleNewBookingChange}
+          required
+        />
+        <input
+          type="time"
+          name="bookingTime"
+          value={newBooking.bookingTime}
+          onChange={handleNewBookingChange}
+          required
+        />
+        <input
+          type="number"
+          name="roomId"
+          placeholder="Room ID (Optional)"
+          value={newBooking.roomId}
+          onChange={handleNewBookingChange}
+        />
+        <input
+          type="number"
+          name="amenityId"
+          placeholder="Amenity ID (Optional)"
+          value={newBooking.amenityId}
+          onChange={handleNewBookingChange}
+        />
+        <button type="submit">Create Booking</button>
+      </form>
     </div>
   );
 }

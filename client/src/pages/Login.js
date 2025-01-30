@@ -17,52 +17,62 @@ function Login({ onLogin }) {
   const slides = [slide1, slide2, slide3];
   const navigate = useNavigate();
 
-  const API_URL = "http://127.0.0.1:5555";
-
   const handleLogin = async (e) => {
     e.preventDefault();
-    
+
+    // Check if all required fields are filled
     if (!username || !email || !password) {
-      setError("Please fill out all fields.");
+      setError("Please fill out all fields (Username, Email, and Password are required).");
       return;
     }
 
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      setError("Please enter a valid email.");
-      return;
-    }
-
-    setError(null); // Reset error when user starts submitting
     const loginData = {
+      name,
       username,
       email,
-      password
+      password,
+      user_type: null,
+      user_type_id: null,
+      id: Math.floor(Math.random() * 1000), // Generate a random id or retrieve it from your database
     };
 
     try {
-      const response = await fetch(`${API_URL}/users`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(loginData),
-      });
+      // Check if the username or email already exists
+      const responseCheck = await fetch("http://127.0.0.1:5555/users");
+      const users = await responseCheck.json();
 
-      if (response.ok) {
-        const user = await response.json();
-        const { access_token } = user; // Get the JWT token
+      const existingUser = users.find((user) => user.username === username || user.email === email);
 
-        localStorage.setItem("clientName", user.name);
-        localStorage.setItem("clientUsername", user.username);
-        localStorage.setItem("access_token", access_token); // Store the token
-        onLogin(user); // Pass user data to parent
-        setUsername("");
-        setEmail("");
-        setPassword("");
-        navigate("/profile"); // Redirect to profile page
+      if (existingUser) {
+        // If the user exists, log them in
+        localStorage.setItem("clientName", existingUser.name);
+        localStorage.setItem("clientUsername", existingUser.username);
+        onLogin(existingUser);
+        navigate("/profile");
       } else {
-        const errorData = await response.json();
-        setError(errorData.error || "Login failed. Please check your credentials.");
+        // If the user doesn't exist, post their details to the API
+        const responsePost = await fetch("http://127.0.0.1:5555/users", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(loginData),
+        });
+
+        if (responsePost.ok) {
+          const newUser = await responsePost.json();
+          localStorage.setItem("clientName", newUser.name);
+          localStorage.setItem("clientUsername", newUser.username);
+          onLogin(newUser);
+          navigate("/profile");
+        } else {
+          setError("There was an error while creating your account.");
+        }
       }
+
+      // Reset the form fields after successful login or registration
+      setName("");
+      setEmail("");
+      setUsername("");
+      setPassword("");
     } catch (error) {
       console.error("Error during login:", error);
       setError("There was an error during login.");
@@ -73,7 +83,7 @@ function Login({ onLogin }) {
     const interval = setInterval(() => {
       setCurrentSlide((prevSlide) => (prevSlide + 1) % slides.length);
     }, 3000);
-    return () => clearInterval(interval); // Cleanup on component unmount
+    return () => clearInterval(interval);
   }, [slides.length]);
 
   return (
@@ -85,11 +95,25 @@ function Login({ onLogin }) {
 
       <div className="login-form-container">
         <h2>Welcome to the Luxury Hotel login page</h2>
-        <p>
-          Keep up with all your activities. Are you new here? <a href="/register">Create an Account</a>
-        </p>
+        <p>Keep up with all your activities. Are you new here? <a href="/register">Create an Account</a></p>
 
         <form onSubmit={handleLogin}>
+          <input
+            type="text"
+            placeholder="Name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            className="login-input"
+            aria-label="Name"
+          />
+          <input
+            type="text"
+            placeholder="Email Address"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="login-input"
+            aria-label="Email Address"
+          />
           <input
             type="text"
             placeholder="Username"
@@ -97,16 +121,6 @@ function Login({ onLogin }) {
             onChange={(e) => setUsername(e.target.value)}
             className="login-input"
             aria-label="Username"
-            onFocus={() => setError(null)} // Reset error on focus
-          />
-          <input
-            type="email"
-            placeholder="Email Address"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="login-input"
-            aria-label="Email Address"
-            onFocus={() => setError(null)} // Reset error on focus
           />
           <input
             type="password"
@@ -115,7 +129,6 @@ function Login({ onLogin }) {
             onChange={(e) => setPassword(e.target.value)}
             className="login-input"
             aria-label="Password"
-            onFocus={() => setError(null)} // Reset error on focus
           />
           <a href="#" className="forgot-password">Forgot password?</a>
 

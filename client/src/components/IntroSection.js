@@ -88,18 +88,16 @@ function IntroSection({ userInfo, existingBooking }) {
     }
 
     const bookingData = {
-      room: selectedRoom.name,
-      cost: selectedRoom.cost,
-      description: selectedRoom.description,
+      username: clientName,  // Assuming username is the client's name
+      email: clientEmail,
       bookingDate: bookingDate,
       bookingTime: bookingTime,  // Include time in booking data
-      clientName: clientName,
-      clientEmail: clientEmail,
+      roomId: selectedRoom.id,  // Include room ID for reference
     };
 
     try {
       // Send room and booking details to the server (replace with your endpoint)
-      const response = await fetch('https://hotel-app-75bj.onrender.com/bookings', {
+      const response = await fetch('http://127.0.0.1:5555/bookings', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
