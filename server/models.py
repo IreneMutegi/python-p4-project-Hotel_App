@@ -32,7 +32,7 @@ class User(db.Model, SerializerMixin):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String, unique=True)
     email = db.Column(db.String, unique=True)
-    password = db.Column(db.String)
+    password = db.Column(db.String)  # Store plain-text password
 
     user_type_id = db.Column(db.Integer, db.ForeignKey('user_types.id'))
 
@@ -42,7 +42,10 @@ class User(db.Model, SerializerMixin):
     user_type = db.relationship('UserType', back_populates='users')
 
     def set_password(self, password):
-        self.password = password 
+        self.password = password  # Store password directly (without hashing)
+
+    def check_password(self, password):
+        return self.password == password  # Directly compare passwords
 
 
 # Room model
