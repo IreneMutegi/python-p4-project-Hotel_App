@@ -1,8 +1,7 @@
 from flask import Flask, request, make_response
 from flask_migrate import Migrate
 from flask_restful import Api, Resource
-from flask_cors import CORS, cross_origin
-from models import db, User, Room, Amenity, UserRoomBooking, UserAmenityBooking  
+from models import db, User, Room, Amenity, UserRoomBooking, UserAmenityBooking  # Your models
 
 app = Flask(__name__)
 CORS(app, origins="http://localhost:3000", supports_credentials=True)
@@ -29,20 +28,15 @@ api.add_resource(Home, '/')
 class Users(Resource):
     @cross_origin(origin='localhost', headers=['Content-Type', 'Authorization'])
     def post(self):
-        data = request.get_json()
+        
+        data = request.get_json()  # Assuming the request sends JSON
+        new_user = User(username=data['username'], email=data['email'])
+        db.session.add(new_user)
+        db.session.commit()
 
-        if 'username' not in data or 'email' not in data or 'password' not in data:
-            return {"error": "Username, email, and password are required"}, 400
-
-        user = User.query.filter((User.username == data['username']) | (User.email == data['email'])).first()
-
-        if user and user.check_password(data['password']):
-            # Instead of JWT, just return user data (remove token logic)
-            response_dict = user.to_dict()
-            response = make_response(response_dict, 200)
-            return response
-        else:
-            return {"error": "Invalid username, email, or password"}, 401
+        response_dict = new_user.to_dict()
+        response = make_response(response_dict, 201)
+        return response
 
 api.add_resource(Users, '/users')  
 
@@ -108,10 +102,47 @@ class Amenities(Resource):
         response = make_response(response_dict, 201)
         return response
 
-api.add_resource(Amenities, '/amenities')  
+api.add_resource(Amenities, '/amenities')  # Create and get all amenities
 
-# User Amenity Bookings Resource
-class AmenityBookings(Resource):
+# Amenity by ID Resource (for handling specific amenity by ID)
+class AmenityByID(Resource):
+    def get(self, amenity_id):
+        amenity = Amenity.query.get(amenity_id)
+        if amenity:
+            response_dict = amenity.to_dict()
+            response = make_response(response_dict, 200)
+        else:
+            response = make_response({"message": "Amenity not found"}, 404)
+        return response
+
+api.add_resource(AmenityByID, '/amenities/<int:amenity_id>')  # Get amenity by ID
+
+# User Room Booking Resource (for handling room bookings by users)
+class UserRoomBookings(Resource):
+    def get(self):
+        response_dict_list = [booking.to_dict() for booking in UserRoomBooking.query.all()]
+        response = make_response(response_dict_list, 200)
+        return response
+
+    def post(self):
+        data = request.get_json()
+        new_booking = UserRoomBooking(
+            user_id=data['user_id'],
+            room_id=data['room_id'],
+            check_in_date=data['check_in_date'],
+            check_out_date=data['check_out_date']
+        )
+        db.session.add(new_booking)
+        db.session.commit()
+
+        response_dict = new_booking.to_dict()
+        response = make_response(response_dict, 201)
+        return response
+
+api.add_resource(UserRoomBookings, '/user_room_bookings')  # Create and get all room bookings
+
+# User Amenity Booking Resource (for handling amenity bookings by users)
+class UserAmenityBookings(Resource):
     def get(self):
         response_dict_list = [booking.to_dict() for booking in UserAmenityBooking.query.all()]
         response = make_response(response_dict_list, 200)
