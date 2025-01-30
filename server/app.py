@@ -313,22 +313,18 @@ class UserBookings(Resource):
     def post(self):
         data = request.get_json()
 
-        # Ensure user information is provided
         if not all(k in data for k in ['username', 'email', 'bookingDate', 'bookingTime']):
             return {"error": "Username, Email, Booking Date, and Booking Time are required"}, 400
 
-        # Fetch the user
         user = User.query.filter_by(username=data['username'], email=data['email']).first()
         if not user:
             return {"error": "User not found"}, 404
 
-        # Check for roomId or amenityId in the data
         if 'roomId' in data:
             room = Room.query.get(data['roomId'])
             if not room:
                 return {"error": "Room not found"}, 404
             
-            # Create a room booking
             try:
                 booking_time = datetime.strptime(f"{data['bookingDate']} {data['bookingTime']}", "%Y-%m-%d %H:%M")
                 new_booking = UserRoomBooking(
@@ -348,7 +344,6 @@ class UserBookings(Resource):
             if not amenity:
                 return {"error": "Amenity not found"}, 404
             
-            # Create an amenity booking
             try:
                 booking_time = datetime.strptime(f"{data['bookingDate']} {data['bookingTime']}", "%Y-%m-%d %H:%M")
                 new_booking = UserAmenityBooking(
@@ -366,7 +361,6 @@ class UserBookings(Resource):
             return {"error": "Invalid booking type. Please provide either 'roomId' or 'amenityId'."}, 400
 
     def delete(self, booking_id):
-        # Find the booking by ID
         room_booking = UserRoomBooking.query.get(booking_id)
         amenity_booking = UserAmenityBooking.query.get(booking_id)
 
@@ -391,7 +385,6 @@ class UserBookings(Resource):
     def put(self, booking_id):
         data = request.get_json()
 
-        # Find the booking by ID
         room_booking = UserRoomBooking.query.get(booking_id)
         amenity_booking = UserAmenityBooking.query.get(booking_id)
 
@@ -413,7 +406,7 @@ class UserBookings(Resource):
         
         return {"error": "Booking not found"}, 404
 
-api.add_resource(UserBookings, '/bookings', '/bookings/<int:booking_id>')  # Added DELETE and PUT methods
+api.add_resource(UserBookings, '/bookings', '/bookings/<string:client_email>', '/bookings/<int:booking_id>')
 
 if __name__ == '__main__':
     app.run(port=5555, debug=True)

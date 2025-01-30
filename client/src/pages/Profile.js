@@ -27,7 +27,7 @@ function Profile() {
 
       // Fetch bookings related to this user using email
       fetch(`http://127.0.0.1:5555/bookings?clientEmail=${userEmail}`)
-        .then((response) => response.json())
+      .then((response) => response.json())
         .then((data) => {
           if (Array.isArray(data)) {
             setBookings(data); // Set bookings only if data is an array
@@ -139,8 +139,8 @@ function Profile() {
 
   return (
     <div className="profile-container">
-      <h1 className="profile-title">Welcome, {user.name}!</h1>
-      <h2>Your Bookings</h2>
+<h1 className="profile-title">Welcome, {user?.name || "Guest"}!</h1>
+<h2>Your Bookings</h2>
       {bookings.length === 0 ? (
         <p>No bookings found.</p>
       ) : (
