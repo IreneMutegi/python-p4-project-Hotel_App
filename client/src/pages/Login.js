@@ -17,7 +17,6 @@ function Login({ onLogin }) {
   const slides = [slide1, slide2, slide3];
   const navigate = useNavigate();
 
-  // Hardcoded API URL for local development
   const API_URL = "http://127.0.0.1:5555";
 
   const handleLogin = async (e) => {
@@ -25,6 +24,12 @@ function Login({ onLogin }) {
     
     if (!username || !email || !password) {
       setError("Please fill out all fields.");
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setError("Please enter a valid email.");
       return;
     }
 
