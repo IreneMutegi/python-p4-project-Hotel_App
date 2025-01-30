@@ -30,10 +30,16 @@ class Users(Resource):
 
     def post(self):
         data = request.get_json()
-        new_user = User(username=data['username'], email=data['email'])
+
+        # Ensure all required fields are present
+        if not all(key in data for key in ['username', 'email', 'password']):
+            return {"error": "Username, email, and password are required"}, 400
+
+        new_user = User(username=data['username'], email=data['email'], password=data['password'])  # Include password
         db.session.add(new_user)
         db.session.commit()
         return new_user.to_dict(), 201
+
 
 api.add_resource(Users, '/users')  
 # class Login(Resource):
