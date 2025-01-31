@@ -1,55 +1,35 @@
 import React, { useState, useEffect } from "react";
-import './Profile.css';
+import "./Profile.css";
 
-function Profile() {
-  const [user, setUser] = useState(null);
-  const [bookings, setBookings] = useState([]);
+function Profile({ userInfo, allBookings }) {
+  const [bookings, setBookings] = useState(allBookings);
   const [errorMessage, setErrorMessage] = useState("");
+  const [loading, setLoading] = useState(false);
   const [editingBooking, setEditingBooking] = useState(null);
   const [updatedBooking, setUpdatedBooking] = useState({ bookingDate: "", bookingTime: "" });
-  const [newBooking, setNewBooking] = useState({
-    username: "",
-    email: "",
-    bookingDate: "",
-    bookingTime: "",
-    roomId: "",
-    amenityId: ""
-  });
 
   useEffect(() => {
-    // Retrieve user details from localStorage
-    const userName = localStorage.getItem("clientName");
-    const userEmail = localStorage.getItem("clientUsername");
+    if (!userInfo) return;
 
-    if (userName && userEmail) {
-      // Set user details
-      setUser({ name: userName, email: userEmail });
-
-      // Fetch bookings related to this user using email
-      fetch(`http://127.0.0.1:5555/bookings?clientEmail=${userEmail}`)
-      .then((response) => response.json())
-        .then((data) => {
-          if (Array.isArray(data)) {
-            setBookings(data); // Set bookings only if data is an array
-          } else {
-            setErrorMessage("Bookings data is not in the expected format.");
-          }
-        })
-        .catch((error) => {
-          console.error("Error fetching bookings:", error);
-          setErrorMessage("An error occurred while fetching bookings.");
-        });
-    } else {
-      setErrorMessage("No user logged in.");
-    }
-  }, []);
+    setLoading(true);
+    fetch(`http://127.0.0.1:5555/bookings/${userInfo.email}`)
+      .then((response) => {
+        if (!response.ok) throw new Error("Failed to fetch bookings");
+        return response.json();
+      })
+      .then((data) => setBookings(data))
+      .catch((error) => setErrorMessage(error.message))
+      .finally(() => setLoading(false));
+  }, [userInfo]);
 
   const handleEdit = (booking) => {
-    setEditingBooking(booking);
-    setUpdatedBooking({
-      bookingDate: booking.bookingDate,
-      bookingTime: booking.bookingTime,
-    });
+    if (editingBooking?.id !== booking.id) {  // Only update state if the booking is different
+      setEditingBooking(booking);
+      setUpdatedBooking({
+        bookingDate: booking.bookingDate,
+        bookingTime: booking.bookingTime,
+      });
+    }
   };
 
   const handleInputChange = (e) => {
@@ -63,206 +43,81 @@ function Profile() {
   const handleSaveEdit = (id) => {
     fetch(`http://127.0.0.1:5555/bookings/${id}`, {
       method: "PATCH",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(updatedBooking),
     })
-      .then((response) => response.json())
-      .then((data) => {
+      .then(() => {
         setBookings((prevBookings) =>
           prevBookings.map((booking) =>
             booking.id === id ? { ...booking, ...updatedBooking } : booking
           )
         );
-        setEditingBooking(null); // Close the edit form
+        setEditingBooking(null);
       })
-      .catch((error) => {
-        console.error("Error saving edited booking:", error);
-        setErrorMessage("An error occurred while saving the booking.");
-      });
+      .catch((error) => setErrorMessage("An error occurred while saving the booking."));
   };
 
   const handleDelete = (id) => {
-    fetch(`http://127.0.0.1:5555/bookings/${id}`, {
-      method: "DELETE",
-    })
+    fetch(`http://127.0.0.1:5555/bookings/${id}`, { method: "DELETE" })
       .then(() => {
-        setBookings((prevBookings) =>
-          prevBookings.filter((booking) => booking.id !== id)
-        );
+        setBookings((prevBookings) => prevBookings.filter((booking) => booking.id !== id));
       })
-      .catch((error) => {
-        console.error("Error deleting booking:", error);
-        setErrorMessage("An error occurred while deleting the booking.");
-      });
+      .catch((error) => setErrorMessage(error.message));
   };
 
-  const handleNewBookingChange = (e) => {
-    const { name, value } = e.target;
-    setNewBooking((prevState) => ({
-      ...prevState,
-      [name]: value,
-    }));
-  };
-
-  const handleSubmitNewBooking = (e) => {
-    e.preventDefault();
-    
-    fetch("http://127.0.0.1:5555/bookings", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(newBooking),
-    })
-      .then((response) => response.json())
-      .then((data) => {
-        setBookings((prevBookings) => [...prevBookings, data]); // Add new booking to the list
-        setNewBooking({
-          username: "",
-          email: "",
-          bookingDate: "",
-          bookingTime: "",
-          roomId: "",
-          amenityId: ""
-        }); // Reset new booking form
-      })
-      .catch((error) => {
-        console.error("Error creating new booking:", error);
-        setErrorMessage("An error occurred while creating the booking.");
-      });
-  };
-
+  if (loading) return <p>Loading...</p>;
   if (errorMessage) return <p className="error-message">{errorMessage}</p>;
-  if (!user) return <p>Loading...</p>;
+  if (!bookings.length) return <p>No bookings found for {userInfo.email}.</p>;
 
   return (
     <div className="profile-container">
-<h1 className="profile-title">Welcome, {user?.name || "Guest"}!</h1>
-<h2>Your Bookings</h2>
-      {bookings.length === 0 ? (
-        <p>No bookings found.</p>
-      ) : (
-        <ul className="bookings-list">
-          {bookings.map((booking) => (
-            <li key={booking.id} className="booking-item">
-              {editingBooking && editingBooking.id === booking.id ? (
-                <div>
-                  <h3>Edit Booking</h3>
-                  <div className="edit-form">
-                    <label>
-                      Date:
-                      <input
-                        type="date"
-                        name="bookingDate"
-                        value={updatedBooking.bookingDate}
-                        onChange={handleInputChange}
-                      />
-                    </label>
-                    <label>
-                      Time:
-                      <input
-                        type="time"
-                        name="bookingTime"
-                        value={updatedBooking.bookingTime}
-                        onChange={handleInputChange}
-                      />
-                    </label>
-                    <div className="button-container">
-                      <button
-                        className="save-btn"
-                        type="button"
-                        onClick={() => handleSaveEdit(booking.id)}
-                      >
-                        Save
-                      </button>
-                      <button
-                        className="cancel-btn"
-                        type="button"
-                        onClick={() => setEditingBooking(null)}
-                      >
-                        Cancel
-                      </button>
-                    </div>
-                  </div>
+      <h1 className="profile-title">Welcome, {userInfo.name || userInfo.username || userInfo.email}!</h1>
+      <h2>Your Bookings</h2>
+      <ul className="bookings-list">
+        {bookings.map((booking) => (
+          <li key={booking.id} className="booking-item">
+            {editingBooking && editingBooking.id === booking.id ? (
+              <div className="edit-form">
+                <h3>Edit Booking</h3>
+                <label>
+                  Date:
+                  <input
+                    type="date"
+                    name="bookingDate"
+                    value={updatedBooking.bookingDate}
+                    onChange={handleInputChange}
+                  />
+                </label>
+                <label>
+                  Time:
+                  <input
+                    type="time"
+                    name="bookingTime"
+                    value={updatedBooking.bookingTime}
+                    onChange={handleInputChange}
+                  />
+                </label>
+                <div className="button-container">
+                  <button className="save-btn" onClick={() => handleSaveEdit(booking.id)}>Save</button>
+                  <button className="cancel-btn" onClick={() => setEditingBooking(null)}>Cancel</button>
                 </div>
-              ) : (
-                <div className="booking-info">
-                  <h3>{booking.room || booking.amenity}</h3>
-                  <p>{booking.description}</p>
-                  <p>Cost: {booking.cost}</p>
-                  <p>Date: {booking.bookingDate}</p>
-                  <p>Time: {booking.bookingTime}</p>
-                  <div className="button-container">
-                    <button
-                      className="edit-btn"
-                      onClick={() => handleEdit(booking)}
-                    >
-                      Edit
-                    </button>
-                    <button
-                      className="delete-btn"
-                      onClick={() => handleDelete(booking.id)}
-                    >
-                      Delete
-                    </button>
-                  </div>
+              </div>
+            ) : (
+              <div className="booking-info">
+                <h3>{booking.room || booking.amenity || "Unknown"}</h3>
+                <p>{booking.description}</p>
+                <p>Cost: {booking.cost}</p>
+                <p>Date: {booking.bookingDate}</p>
+                <p>Time: {booking.bookingTime}</p>
+                <div className="button-container">
+                  <button className="edit-btn" onClick={() => handleEdit(booking)}>Edit</button>
+                  <button className="delete-btn" onClick={() => handleDelete(booking.id)}>Delete</button>
                 </div>
-              )}
-            </li>
-          ))}
-        </ul>
-      )}
-      
-      <h2>Make a New Booking</h2>
-      <form onSubmit={handleSubmitNewBooking}>
-        <input
-          type="text"
-          name="username"
-          placeholder="Username"
-          value={newBooking.username}
-          onChange={handleNewBookingChange}
-          required
-        />
-        <input
-          type="email"
-          name="email"
-          placeholder="Email"
-          value={newBooking.email}
-          onChange={handleNewBookingChange}
-          required
-        />
-        <input
-          type="date"
-          name="bookingDate"
-          value={newBooking.bookingDate}
-          onChange={handleNewBookingChange}
-          required
-        />
-        <input
-          type="time"
-          name="bookingTime"
-          value={newBooking.bookingTime}
-          onChange={handleNewBookingChange}
-          required
-        />
-        <input
-          type="number"
-          name="roomId"
-          placeholder="Room ID (Optional)"
-          value={newBooking.roomId}
-          onChange={handleNewBookingChange}
-        />
-        <input
-          type="number"
-          name="amenityId"
-          placeholder="Amenity ID (Optional)"
-          value={newBooking.amenityId}
-          onChange={handleNewBookingChange}
-        />
-        <button type="submit">Create Booking</button>
-      </form>
+              </div>
+            )}
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }

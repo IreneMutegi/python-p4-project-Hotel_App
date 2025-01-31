@@ -42,22 +42,7 @@ class Users(Resource):
 
 
 api.add_resource(Users, '/users')  
-# class Login(Resource):
-#     def post(self):
-#         data = request.get_json()
 
-#         # Check if email exists in the database
-#         user = User.query.filter_by(email=data['email']).first()
-#         if not user:
-#             return {"error": "Email not found"}, 404
-
-#         # Check if the password matches
-#         if not user.check_password(data['password']):
-#             return {"error": "Invalid password"}, 401
-
-#         return {"message": "Login successful", "user": user.to_dict()}, 200
-
-# api.add_resource(Login, '/login')
 
 class UserByID(Resource):
     def get(self, user_id):
@@ -65,7 +50,17 @@ class UserByID(Resource):
         if user:
             return user.to_dict(), 200
         return {"message": "User not found"}, 404
-
+    def delete(self, user_id):
+        user = User.query.get(user_id)
+        if user:
+            try:
+                User.query.filter_by(id=user_id).delete()  # Deletes the user
+                db.session.commit()  # Commits the deletion to the database
+                return {"message": "User successfully deleted"}, 200
+            except Exception as e:
+                db.session.rollback()  # In case of an error, rollback
+                return {"message": "Error deleting user", "error": str(e)}, 500
+        return {"message": "User not found"}, 404
 api.add_resource(UserByID, '/users/<int:user_id>') 
 
 
